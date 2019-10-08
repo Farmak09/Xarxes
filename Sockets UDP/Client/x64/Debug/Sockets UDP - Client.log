@@ -1,7 +1,1 @@
-﻿  main_client.cpp
-c:\users\farma\desktop\sockets udp\client\main_client.cpp(53): warning C4305: 'initializing': truncation from 'int' to 'char'
-c:\users\farma\desktop\sockets udp\client\main_client.cpp(53): warning C4309: 'initializing': truncation of constant value
-c:\users\farma\desktop\sockets udp\client\main_client.cpp(54): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-c:\users\farma\desktop\sockets udp\client\main_client.cpp(56): warning C4309: 'initializing': truncation of constant value
-c:\users\farma\desktop\sockets udp\client\main_client.cpp(59): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-  Sockets UDP - Client.vcxproj -> C:\Users\farma\Desktop\Sockets UDP\x64\Debug\Sockets UDP - Client.exe
+﻿  Sockets UDP - Client.vcxproj -> C:\Users\jaumesv1\Documents\GitHub\Xarxes\Sockets UDP\x64\Debug\Sockets UDP - Client.exe

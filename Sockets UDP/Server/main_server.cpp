@@ -46,17 +46,26 @@ void server(int port)
 	bindAddr.sin_addr.S_un.S_addr = INADDR_ANY;
 
 	// TODO-4: Bind to a local address
-	int res = bind(s, (const struct sockaddr *)&bindAddr, sizeof(bindAddr));
+	int res = bind(s, (sockaddr *)&bindAddr, sizeof(bindAddr));
+
+
+	std::string message("Yote");
+
+	struct sockaddr fromAddr;
+
+	char recvmsg[155];
+
+	int sizeAddr = sizeof(fromAddr);
 
 	while (true)
 	{
 		char* recvmsg = new char(155);
 
 		int sizeAddr = sizeof(bindAddr);
-		if (recvfrom(s, recvmsg, strlen(recvmsg), 0, (struct sockaddr *)&bindAddr, &sizeAddr))
+		if (recvfrom(s, recvmsg, strlen(recvmsg), 0, &fromAddr, &sizeAddr))
 		{
-			const char* message = new char('Yote');
-			sendto(s, message, strlen(message), 0, (const struct sockaddr *)&bindAddr, sizeof(bindAddr));
+			Sleep(1500);
+			sendto(s, message.c_str(), (int)message.size()+1, 0, (const sockaddr *)&fromAddr, sizeof(fromAddr));
 		}
 		// TODO-5:
 		// - Receive 'ping' packet from a remote host

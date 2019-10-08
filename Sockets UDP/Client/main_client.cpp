@@ -42,33 +42,39 @@ void client(const char *serverAddrStr, int port)
 	if (s == INVALID_SOCKET)
 		return;
 
+	std::string message("Yeet");
+
+
 	// TODO-3: Create an address object with the server address
 	sockaddr_in remoteAddr;
 	remoteAddr.sin_family = AF_INET; // IPv4	remoteAddr.sin_port = htons(port);
 	const char *remoteAddrStr = serverAddrStr; // Not so remote… :-P
 	inet_pton(AF_INET, remoteAddrStr, &remoteAddr.sin_addr);
 
+	struct sockaddr fromAddr;
+
+	char recvmsg[155];
+
+	int sizeAddr = sizeof(fromAddr);
+
 	while (true)
 	{
-		const char* message = new char('Yeet');
-		sendto(s, message, strlen(message), 0, (const struct sockaddr *)&remoteAddr, sizeof(remoteAddr));
+		sendto(s, message.c_str(), (int)message.size()+1, 0, (sockaddr *)&remoteAddr, sizeof(remoteAddr));
 
-		char* recvmsg = new char(155);
 
-		int sizeAddr = sizeof(remoteAddr);
-		recvfrom(s, recvmsg, strlen(recvmsg), 0, (struct sockaddr *)&remoteAddr, &sizeAddr);
+		recvfrom(s, recvmsg, 155, 0, &fromAddr, &sizeAddr);
+		Sleep(1500);
 		// TODO-4:
 		// - Send a 'ping' packet to the server
 		// - Receive 'pong' packet from the server
 		// - Control errors in both cases
-		delete message;
 	}
 
 	// TODO-5: Close socket
 	closesocket(s);
 
 	// TODO-6: Winsock shutdown
-	iResult = WSACleanup();
+	WSACleanup();
 
 }
 

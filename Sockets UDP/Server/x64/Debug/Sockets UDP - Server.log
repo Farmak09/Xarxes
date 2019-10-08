@@ -1,0 +1,5 @@
+﻿  main_server.cpp
+c:\users\jaumesv1\documents\github\xarxes\sockets udp\server\main_server.cpp(62): warning C4309: 'initializing': truncation of constant value
+c:\users\jaumesv1\documents\github\xarxes\sockets udp\server\main_server.cpp(65): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+c:\users\jaumesv1\documents\github\xarxes\sockets udp\server\main_server.cpp(56): warning C4101: 'recvmsg': unreferenced local variable
+  Sockets UDP - Server.vcxproj -> C:\Users\jaumesv1\Documents\GitHub\Xarxes\Sockets UDP\x64\Debug\Sockets UDP - Server.exe
