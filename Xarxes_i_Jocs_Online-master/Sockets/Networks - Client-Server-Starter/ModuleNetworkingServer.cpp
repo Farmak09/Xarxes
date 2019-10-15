@@ -13,14 +13,14 @@ bool ModuleNetworkingServer::start(int port)
 	// - Create the listenSocket
 	listenSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if (listenSocket == INVALID_SOCKET) {
-		LOG("Server socket couldn't be created");
+		printWSErrorAndExit("Server socket couldn't be created");
 	}
 
 	// - Set address reuse
 	int enable = 1;
 	int result = setsockopt(listenSocket, SOL_SOCKET, SO_REUSEADDR, (const char*)&enable, sizeof(int));
 	if (result == SOCKET_ERROR) {
-		LOG("Couldn't ser address to reuse");
+		printWSErrorAndExit("Couldn't ser address to reuse");
 	}
 
 	// - Bind the socket to a local interface
@@ -37,13 +37,15 @@ bool ModuleNetworkingServer::start(int port)
 	// - Enter in listen mode
 	int listenRes = listen(listenSocket, 1);
 	if (listenRes == SOCKET_ERROR) {
-		LOG("Couldn't enter listen mode");
+		printWSErrorAndExit("Couldn't enter listen mode");
 	}
 
 	// - Add the listenSocket to the managed list of sockets using addSocket()
 	sockets.push_back(listenSocket);
 
 	state = ServerState::Listening;
+
+	LOG("Server set up correctly!");
 
 	return true;
 }

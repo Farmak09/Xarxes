@@ -7,9 +7,9 @@ bool  ModuleNetworkingClient::start(const char * serverAddressStr, int serverPor
 
 	// TODO(jesus): TCP connection stuff
 	// - Create the socket
-	client_socket = socket(AF_INET, SOCK_STREAM, 0);
-	if (client_socket == INVALID_SOCKET) {
-		LOG("Client socket couldn't be creatd");
+	clientSocket = socket(AF_INET, SOCK_STREAM, 0);
+	if (clientSocket == INVALID_SOCKET) {
+		printWSErrorAndContinue("Client socket couldn't be creatd");
 	}
 
 	// - Create the remote address object
@@ -20,13 +20,13 @@ bool  ModuleNetworkingClient::start(const char * serverAddressStr, int serverPor
 	serverAddr.sin_port = htons(serverPort); // Port
 
 	// - Connect to the remote address
-	int connectRes = connect(client_socket, (const sockaddr*)&serverAddr, serverAddrLen);
+	int connectRes = connect(clientSocket, (const sockaddr*)&serverAddr, serverAddrLen);
 	if (connectRes == SOCKET_ERROR) {
-		LOG("Couldn't connect to remote address");
+		printWSErrorAndContinue("Couldn't connect to remote address");
 	}
 
 	// - Add the created socket to the managed list of sockets using addSocket()
-	addSocket(client_socket);
+	addSocket(clientSocket);
 
 	// If everything was ok... change the state
 	state = ClientState::Start;
@@ -44,16 +44,16 @@ bool ModuleNetworkingClient::update()
 	if (state == ClientState::Start)
 	{
 		// TODO(jesus): Send the player name to the server
-		int result = send(client_socket, playerName.data(), playerName.size() + 1, 0);
+		int result = send(clientSocket, playerName.c_str(), playerName.size() + 1, 0);
 		if (result > 0)
 		{
-			LOG("%s was sent to server successfully", playerName.data());
+			LOG("%s was sent to server successfully", playerName.c_str());
 			state = ClientState::Logging;
 		}
 		else
 		{
 			int err = WSAGetLastError();
-			printWSErrorAndContinue("%s couldn't be sent to the server", playerName.data());
+			printWSErrorAndContinue("%s couldn't be sent to the server", playerName.c_str());
 		}
 	}
 

@@ -34,6 +34,7 @@ private:
 protected:
 
 	sockaddr_in address;
+	int addressLen;
 	std::vector<SOCKET> sockets;
 
 	void addSocket(SOCKET socket);

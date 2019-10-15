@@ -74,7 +74,7 @@ bool ModuleNetworking::preUpdate()
 	int result = select(0, &read_fd, nullptr, nullptr, &timeout);
 	if (result == SOCKET_ERROR)
 	{
-		LOG("The socket couldn't be selected");
+		printWSErrorAndExit("The socket couldn't be selected");
 	}
 
 	
@@ -88,41 +88,46 @@ bool ModuleNetworking::preUpdate()
 		{
 			if (isListenSocket(s))
 			{
-				int result = accept(s, (sockaddr*)&address, (int*)sizeof(address));
-				if (result >= 0)
+				addressLen = sizeof(address);
+				SOCKET newSocket = accept(s, (sockaddr*)&address, &addressLen);
+				if (newSocket)
 				{
 					// On accept() success, communicate the new connected socket to the
 					// subclass (use the callback onSocketConnected()), and add the new
 					// connected socket to the managed list of sockets.
-					onSocketConnected(s, address);
+					onSocketConnected(newSocket, address);
+					addSocket(newSocket);
 				}
 				else
-					LOG("Couldn't accept a socket");
+					printWSErrorAndExit("Couldn't accept a socket");
 			}
 			else
 			{
-				char data[69420];
-				int result = recvfrom(s, data, 69420, 0, (sockaddr*)&address, (int*)sizeof(address));
+				byte data[69420];
+				int result = recv(s, (char*)data, 69420, 0);
 				if (result > 0)
 				{
 					// On recv() success, communicate the incoming data received to the
 					// subclass (use the callback onSocketReceivedData()).
-					onSocketReceivedData(s, (byte*)data);
+					onSocketReceivedData(s, data);
 				}
 				else
+				{
 					// TODO(jesus): handle disconnections. Remember that a socket has been
 					// disconnected from its remote end either when recv() returned 0,
 					// or when it generated some errors such as ECONNRESET.
 					// Communicate detected disconnections to the subclass using the callback
 					// onSocketDisconnected().
+					printWSErrorAndExit("No data recieved from socket");
 					onSocketDisconnected(s);
+				}
 			}
 		}
 	}
 
 	// TODO(jesus): Finally, remove all disconnected sockets from the list
 	// of managed sockets.
-	disconnect();
+
 
 	return true;
 }
