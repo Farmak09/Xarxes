@@ -11,43 +11,36 @@ bool ModuleNetworkingServer::start(int port)
 {
 	// TODO(jesus): TCP listen socket stuff
 	// - Create the listenSocket
-	// - Set address reuse
-	// - Bind the socket to a local interface
-	// - Enter in listen mode
-	// - Add the listenSocket to the managed list of sockets using addSocket()
 	listenSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if (listenSocket == INVALID_SOCKET) {
-		printWSErrorAndExit("Error creating Socket:   ");
+		LOG("Server socket couldn't be created");
 	}
-	LOG("Socket Done");
 
+	// - Set address reuse
 	int enable = 1;
 	int result = setsockopt(listenSocket, SOL_SOCKET, SO_REUSEADDR, (const char*)&enable, sizeof(int));
 	if (result == SOCKET_ERROR) {
-		printWSErrorAndExit("Error when using Setsockopt:   ");
+		LOG("Couldn't ser address to reuse");
 	}
-	LOG("setsockopt SO_REUSEADDR done");
 
-	// Address (server)
-	struct sockaddr_in serverAddr;
+	// - Bind the socket to a local interface
+	sockaddr_in serverAddr;
 	serverAddr.sin_family = AF_INET; // IPv4
 	serverAddr.sin_addr.S_un.S_addr = INADDR_ANY; // Any address
 	serverAddr.sin_port = htons(port); // Port
 
-	// Bind socket
-	int bindRes = bind(listenSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr));
+	int bindRes = bind(listenSocket, (sockaddr *)&serverAddr, sizeof(serverAddr));
 	if (bindRes == SOCKET_ERROR) {
-		printWSErrorAndExit("Error when binding the server socket:   ");
+		printWSErrorAndExit("Couldn't bind socket to the local interface");
 	}
-	LOG("Socket binding done");
 
-	// Listen
+	// - Enter in listen mode
 	int listenRes = listen(listenSocket, 1);
 	if (listenRes == SOCKET_ERROR) {
-		printWSErrorAndExit("listen");
+		LOG("Couldn't enter listen mode");
 	}
-	LOG("Listen mode activated");
 
+	// - Add the listenSocket to the managed list of sockets using addSocket()
 	sockets.push_back(listenSocket);
 
 	state = ServerState::Listening;

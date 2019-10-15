@@ -65,20 +65,23 @@ bool ModuleNetworking::preUpdate()
 	fd_set read_fd;
 	FD_ZERO(&read_fd);
 	for (auto s : sockets)
-	{
 		FD_SET(s, &read_fd);
-	}
 
-	struct timeval timeout;
+	timeval timeout;
 	timeout.tv_sec = 0;
 	timeout.tv_usec = 0;
 
 	int result = select(0, &read_fd, nullptr, nullptr, &timeout);
 	if (result == SOCKET_ERROR)
 	{
-		printWSErrorAndExit("Error during the SELECT function");
+		LOG("The socket couldn't be selected");
 	}
 
+	
+	// TODO(jesus): for those sockets selected, check wheter or not they are
+	// a listen socket or a standard socket and perform the corresponding
+	// operation (accept() an incoming connection or recv() incoming data,
+	// respectively).
 	for (auto s : sockets)
 	{
 		if (FD_ISSET(s, &read_fd))
@@ -86,33 +89,40 @@ bool ModuleNetworking::preUpdate()
 			if (isListenSocket(s))
 			{
 				int result = accept(s, (sockaddr*)&address, (int*)sizeof(address));
-				if (result > 0)
+				if (result >= 0)
 				{
+					// On accept() success, communicate the new connected socket to the
+					// subclass (use the callback onSocketConnected()), and add the new
+					// connected socket to the managed list of sockets.
 					onSocketConnected(s, address);
 				}
 				else
-					printWSErrorAndContinue("Could not accept a socket");
+					LOG("Couldn't accept a socket");
+			}
+			else
+			{
+				char data[69420];
+				int result = recvfrom(s, data, 69420, 0, (sockaddr*)&address, (int*)sizeof(address));
+				if (result > 0)
+				{
+					// On recv() success, communicate the incoming data received to the
+					// subclass (use the callback onSocketReceivedData()).
+					onSocketReceivedData(s, (byte*)data);
+				}
+				else
+					// TODO(jesus): handle disconnections. Remember that a socket has been
+					// disconnected from its remote end either when recv() returned 0,
+					// or when it generated some errors such as ECONNRESET.
+					// Communicate detected disconnections to the subclass using the callback
+					// onSocketDisconnected().
+					onSocketDisconnected(s);
 			}
 		}
 	}
-	// TODO(jesus): for those sockets selected, check wheter or not they are
-	// a listen socket or a standard socket and perform the corresponding
-	// operation (accept() an incoming connection or recv() incoming data,
-	// respectively).
-	// On accept() success, communicate the new connected socket to the
-	// subclass (use the callback onSocketConnected()), and add the new
-	// connected socket to the managed list of sockets.
-	// On recv() success, communicate the incoming data received to the
-	// subclass (use the callback onSocketReceivedData()).
-
-	// TODO(jesus): handle disconnections. Remember that a socket has been
-	// disconnected from its remote end either when recv() returned 0,
-	// or when it generated some errors such as ECONNRESET.
-	// Communicate detected disconnections to the subclass using the callback
-	// onSocketDisconnected().
 
 	// TODO(jesus): Finally, remove all disconnected sockets from the list
 	// of managed sockets.
+	disconnect();
 
 	return true;
 }
