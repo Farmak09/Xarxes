@@ -70,7 +70,11 @@ bool ModuleNetworkingClient::gui()
 		Texture *tex = App->modResources->client;
 		ImVec2 texSize(400.0f, 400.0f * tex->height / tex->width);
 		ImGui::Image(tex->shaderResource, texSize);
-
+		if (ImGui::Button("DISCONNECT"))
+		{
+			disconnect();
+			state = ClientState::Stopped;
+		}
 		ImGui::Text("%s connected to the server...", playerName.c_str());
 
 		ImGui::End();

@@ -1,6 +1,6 @@
 #include "Networks.h"
 #include "ModuleNetworking.h"
-
+#include <list>
 
 static uint8 NumModulesUsingWinsock = 0;
 
@@ -78,6 +78,8 @@ bool ModuleNetworking::preUpdate()
 	}
 
 	
+	std::list<SOCKET> disconnectedSockets;
+
 	// TODO(jesus): for those sockets selected, check wheter or not they are
 	// a listen socket or a standard socket and perform the corresponding
 	// operation (accept() an incoming connection or recv() incoming data,
@@ -111,23 +113,30 @@ bool ModuleNetworking::preUpdate()
 					// subclass (use the callback onSocketReceivedData()).
 					onSocketReceivedData(s, data);
 				}
-				else
+				else if (result == 0 || result == ECONNRESET)
 				{
 					// TODO(jesus): handle disconnections. Remember that a socket has been
 					// disconnected from its remote end either when recv() returned 0,
 					// or when it generated some errors such as ECONNRESET.
 					// Communicate detected disconnections to the subclass using the callback
 					// onSocketDisconnected().
-					printWSErrorAndExit("No data recieved from socket");
 					onSocketDisconnected(s);
+					disconnectedSockets.push_back(s);
+				}
+				else
+				{
+					printWSErrorAndExit("Error recieving data from socket");
 				}
 			}
 		}
 	}
 
+
 	// TODO(jesus): Finally, remove all disconnected sockets from the list
 	// of managed sockets.
 
+	for (auto disc_sock : disconnectedSockets)
+		sockets.erase(std::remove(sockets.begin(), sockets.end(), disc_sock), sockets.end());
 
 	return true;
 }
