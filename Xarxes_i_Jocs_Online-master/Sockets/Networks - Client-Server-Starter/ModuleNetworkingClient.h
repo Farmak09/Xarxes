@@ -2,6 +2,23 @@
 
 #include "ModuleNetworking.h"
 
+enum TextType
+{
+	HELP,
+	MESSAGE,
+	INFO,
+
+};
+
+struct ClientData
+{
+	TextType type;
+	std::string text;
+	std::string name;
+
+
+};
+
 class ModuleNetworkingClient : public ModuleNetworking
 {
 public:
@@ -32,11 +49,15 @@ private:
 	// ModuleNetworking virtual methods
 	//////////////////////////////////////////////////////////////////////
 
-	void onSocketReceivedData(SOCKET socket, byte * data) override;
+	void onSocketReceivedData(SOCKET socket, const InputMemoryStream& packet) override;
 
 	void onSocketDisconnected(SOCKET socket) override;
 
+	void DefineTypeAndSendText();
 
+	void CheckTypeOfText();
+
+	void SendTextToServer();
 
 	//////////////////////////////////////////////////////////////////////
 	// Client state
@@ -53,7 +74,11 @@ private:
 
 	sockaddr_in serverAddress = {};
 	SOCKET clientSocket = INVALID_SOCKET;
+	ClientData client;
 
-	std::string playerName;
+
+public:
+	char inputText[69];
+
 };
 

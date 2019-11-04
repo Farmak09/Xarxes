@@ -3,7 +3,7 @@
 
 bool  ModuleNetworkingClient::start(const char * serverAddressStr, int serverPort, const char *pplayerName)
 {
-	playerName = pplayerName;
+	client.name = pplayerName;
 
 	// TODO(jesus): TCP connection stuff
 	// - Create the socket
@@ -43,17 +43,18 @@ bool ModuleNetworkingClient::update()
 {
 	if (state == ClientState::Start)
 	{
-		// TODO(jesus): Send the player name to the server
-		int result = send(clientSocket, playerName.c_str(), playerName.size() + 1, 0);
-		if (result > 0)
+		OutputMemoryStream packet;
+		packet << TextType::HELP;
+		packet << client.name;
+
+		if (sendPacket(packet, clientSocket))
 		{
-			LOG("%s was sent to server successfully", playerName.c_str());
 			state = ClientState::Logging;
 		}
 		else
 		{
-			int err = WSAGetLastError();
-			printWSErrorAndContinue("%s couldn't be sent to the server", playerName.c_str());
+			disconnect();
+			state = ClientState::Stopped;
 		}
 	}
 
@@ -75,7 +76,16 @@ bool ModuleNetworkingClient::gui()
 			disconnect();
 			state = ClientState::Stopped;
 		}
-		ImGui::Text("%s connected to the server...", playerName.c_str());
+		ImGui::Text("%s connected to the server...", client.name.c_str());
+
+		ImGui::End();
+		ImGui::Begin("Input window");
+
+		if (ImGui::InputText("", inputText, 69, ImGuiInputTextFlags_EnterReturnsTrue))
+		{
+			DefineTypeAndSendText();
+		}
+
 
 		ImGui::End();
 	}
@@ -83,7 +93,7 @@ bool ModuleNetworkingClient::gui()
 	return true;
 }
 
-void ModuleNetworkingClient::onSocketReceivedData(SOCKET socket, byte * data)
+void ModuleNetworkingClient::onSocketReceivedData(SOCKET socket, const InputMemoryStream& packet)
 {
 	state = ClientState::Stopped;
 }
@@ -92,4 +102,37 @@ void ModuleNetworkingClient::onSocketDisconnected(SOCKET socket)
 {
 	state = ClientState::Stopped;
 }
+
+void ModuleNetworkingClient::DefineTypeAndSendText()
+{
+	CheckTypeOfText();
+
+	SendTextToServer();
+}
+
+void ModuleNetworkingClient::CheckTypeOfText()
+{
+	client.text = inputText;
+	client.type = TextType::MESSAGE;
+}
+
+void ModuleNetworkingClient::SendTextToServer()
+{
+	OutputMemoryStream packet;
+	packet << client.type;
+	packet << client.name;
+	packet << client.text;
+
+
+	if (sendPacket(packet, clientSocket))
+	{
+		state = ClientState::Logging;
+	}
+	else
+	{
+		disconnect();
+		state = ClientState::Stopped;
+	}
+}
+
 

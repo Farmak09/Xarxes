@@ -105,13 +105,14 @@ bool ModuleNetworking::preUpdate()
 			}
 			else
 			{
-				byte data[69420];
-				int result = recv(s, (char*)data, 69420, 0);
+				InputMemoryStream packet;
+				int result = recv(s, packet.GetBufferPtr(), packet.GetCapacity(), 0);
 				if (result > 0)
 				{
 					// On recv() success, communicate the incoming data received to the
 					// subclass (use the callback onSocketReceivedData()).
-					onSocketReceivedData(s, data);
+					packet.SetSize((uint32)result);
+					onSocketReceivedData(s, packet);
 				}
 				else if (result == 0 || result == ECONNRESET)
 				{
@@ -156,6 +157,16 @@ bool ModuleNetworking::cleanUp()
 		}
 	}
 
+	return true;
+}
+
+bool ModuleNetworking::sendPacket(const OutputMemoryStream & packet, SOCKET socket)
+{
+	if (send(socket, packet.GetBufferPtr(), packet.GetSize(), 0) == SOCKET_ERROR)
+	{
+		reportError("Couldn't send packet");
+		return false;
+	}
 	return true;
 }
 

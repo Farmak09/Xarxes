@@ -77,20 +77,12 @@ bool ModuleNetworkingServer::gui()
 		ImVec2 texSize(400.0f, 400.0f * tex->height / tex->width);
 		ImGui::Image(tex->shaderResource, texSize);
 
-		ImGui::Text("List of connected sockets:");
+		ImGui::Text("List of connected users:");
 
 		for (auto &connectedSocket : connectedSockets)
-		{
-			ImGui::Separator();
-			ImGui::Text("Socket ID: %d", connectedSocket.socket);
-			ImGui::Text("Address: %d.%d.%d.%d:%d",
-				connectedSocket.address.sin_addr.S_un.S_un_b.s_b1,
-				connectedSocket.address.sin_addr.S_un.S_un_b.s_b2,
-				connectedSocket.address.sin_addr.S_un.S_un_b.s_b3,
-				connectedSocket.address.sin_addr.S_un.S_un_b.s_b4,
-				ntohs(connectedSocket.address.sin_port));
 			ImGui::Text("Player name: %s", connectedSocket.playerName.c_str());
-		}
+
+
 
 		ImGui::End();
 	}
@@ -118,16 +110,29 @@ void ModuleNetworkingServer::onSocketConnected(SOCKET socket, const sockaddr_in 
 	connectedSockets.push_back(connectedSocket);
 }
 
-void ModuleNetworkingServer::onSocketReceivedData(SOCKET socket, byte * data)
+void ModuleNetworkingServer::onSocketReceivedData(SOCKET socket, const InputMemoryStream& packet)
 {
-	// Set the player name of the corresponding connected socket proxy
-	for (auto &connectedSocket : connectedSockets)
-	{
-		if (connectedSocket.socket == socket)
+	TextType type;
+	packet >> type;
+
+		if (type == TextType::HELP)
 		{
-			connectedSocket.playerName = (const char *)data;
+			std::string name;
+			packet >> name;
+
+			for (auto &connectedSocket : connectedSockets)
+			{
+				if (connectedSocket.socket == socket)
+				{
+					connectedSocket.playerName = name;
+				}
+			}
 		}
-	}
+		else if (type == TextType::MESSAGE)
+		{
+
+		}
+
 }
 
 void ModuleNetworkingServer::onSocketDisconnected(SOCKET socket)
