@@ -40,7 +40,7 @@ private:
 
 	void onSocketDisconnected(SOCKET socket) override;
 
-	void AddToText(std::string text);
+	void AddToText(const InputMemoryStream& packet, SOCKET socket, std::string sender, std::string text, std::string whispered = " ");
 
 	//////////////////////////////////////////////////////////////////////
 	// State
@@ -62,7 +62,8 @@ private:
 		SOCKET socket;
 		std::string playerName;
 	};
-	std::string chunckOfText;
+	std::string chunkOfText;
+	std::string helpText;
 	std::vector<ConnectedSocket> connectedSockets;
 };
 

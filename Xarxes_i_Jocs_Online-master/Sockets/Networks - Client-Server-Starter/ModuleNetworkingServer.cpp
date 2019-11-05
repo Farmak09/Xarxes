@@ -47,6 +47,8 @@ bool ModuleNetworkingServer::start(int port)
 
 	LOG("Server set up correctly!");
 
+	helpText = "SERVER MESSAGE: Consider yourself helped. \n";
+
 	return true;
 }
 
@@ -82,8 +84,9 @@ bool ModuleNetworkingServer::gui()
 		for (auto &connectedSocket : connectedSockets)
 			ImGui::Text("Player name: %s", connectedSocket.playerName.c_str());
 
-		ImGui::Text(chunckOfText.c_str());
+		ImGui::Text("\n\n");
 
+		ImGui::Text(chunkOfText.c_str());
 
 
 		ImGui::End();
@@ -117,24 +120,61 @@ void ModuleNetworkingServer::onSocketReceivedData(SOCKET socket, const InputMemo
 	TextType type;
 	packet >> type;
 
-		if (type == TextType::HELP)
-		{
-			std::string name;
-			packet >> name;
+	if (type == TextType::JOIN)
+	{
+		std::string name;
+		packet >> name;
 
-			for (auto &connectedSocket : connectedSockets)
+		for (auto& connectedSocket : connectedSockets)
+		{
+			if (connectedSocket.socket == socket)
 			{
-				if (connectedSocket.socket == socket)
-				{
-					connectedSocket.playerName = name;
-				}
+				connectedSocket.playerName = name;
 			}
 		}
-		else if (type == TextType::MESSAGE)
+	}
+	else if (type == TextType::HELP)
+	{
+		std::string name;
+		packet >> name;
+
+		OutputMemoryStream sendingPacket;
+		sendingPacket << helpText;
+
+		for (auto &connectedSocket : connectedSockets)
 		{
-
+			if (connectedSocket.playerName == name)
+			{
+				sendPacket(sendingPacket, connectedSocket.socket);
+			}
 		}
+	}
+	else if (type == TextType::MESSAGE)
+	{
+		std::string sender;
+		packet >> sender;
+		std::string text;
+		packet >> text;
 
+		AddToText(packet, socket, sender, text);
+	}
+	else if (type == TextType::WHISPER)
+	{
+		std::string sender;
+		packet >> sender;
+		std::string text;
+		packet >> text;
+		if (text.find_first_of(" "))
+		{
+			std::string whispered = text.substr(0, text.find_first_of(" "));
+			text = text.substr(text.find_first_of(" ") + 1);
+
+			AddToText(packet, socket, sender, text, whispered);
+		}
+		else
+			AddToText(packet, socket, sender, text);
+
+	}
 }
 
 void ModuleNetworkingServer::onSocketDisconnected(SOCKET socket)
@@ -151,7 +191,29 @@ void ModuleNetworkingServer::onSocketDisconnected(SOCKET socket)
 	}
 }
 
-void ModuleNetworkingServer::AddToText(std::string text)
+void ModuleNetworkingServer::AddToText(const InputMemoryStream& packet, SOCKET socket, std::string sender, std::string text, std::string whispered)
 {
+
+	std::string newMessage;
+
+	newMessage.append(sender);
+	newMessage.append(": ");
+	newMessage.append(text);
+	newMessage.append("\n");
+
+	chunkOfText.append(newMessage);
+
+	OutputMemoryStream sendingPacket;
+	sendingPacket << newMessage;
+
+	for (auto& connectedSocket : connectedSockets)
+	{
+		if (whispered == " ")
+			sendPacket(sendingPacket, connectedSocket.socket);
+		else if(connectedSocket.playerName == whispered)
+			sendPacket(sendingPacket, connectedSocket.socket);
+
+	}
+
 }
 

@@ -6,8 +6,8 @@ enum TextType
 {
 	HELP,
 	MESSAGE,
-	INFO,
-
+	WHISPER,
+	JOIN
 };
 
 struct ClientData
@@ -79,6 +79,6 @@ private:
 
 public:
 	char inputText[69];
-
+	std::string chunkOfText;
 };
 

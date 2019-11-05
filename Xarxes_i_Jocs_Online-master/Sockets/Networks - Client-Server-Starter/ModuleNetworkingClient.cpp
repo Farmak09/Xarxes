@@ -44,7 +44,7 @@ bool ModuleNetworkingClient::update()
 	if (state == ClientState::Start)
 	{
 		OutputMemoryStream packet;
-		packet << TextType::HELP;
+		packet << TextType::JOIN;
 		packet << client.name;
 
 		if (sendPacket(packet, clientSocket))
@@ -76,14 +76,17 @@ bool ModuleNetworkingClient::gui()
 			disconnect();
 			state = ClientState::Stopped;
 		}
-		ImGui::Text("%s connected to the server...", client.name.c_str());
+		ImGui::Text("%s connected to the server...\n\n", client.name.c_str());
+
+		ImGui::Text(chunkOfText.c_str());
 
 		ImGui::End();
 		ImGui::Begin("Input window");
 
-		if (ImGui::InputText("", inputText, 69, ImGuiInputTextFlags_EnterReturnsTrue))
+		if (ImGui::InputText("Text Window", inputText, 69, ImGuiInputTextFlags_EnterReturnsTrue))
 		{
 			DefineTypeAndSendText();
+			memset(inputText, 0, sizeof(inputText));
 		}
 
 
@@ -95,7 +98,9 @@ bool ModuleNetworkingClient::gui()
 
 void ModuleNetworkingClient::onSocketReceivedData(SOCKET socket, const InputMemoryStream& packet)
 {
-	state = ClientState::Stopped;
+	std::string text;
+	packet >> text;
+	chunkOfText.append(text);
 }
 
 void ModuleNetworkingClient::onSocketDisconnected(SOCKET socket)
@@ -112,8 +117,30 @@ void ModuleNetworkingClient::DefineTypeAndSendText()
 
 void ModuleNetworkingClient::CheckTypeOfText()
 {
-	client.text = inputText;
-	client.type = TextType::MESSAGE;
+	std::string tmp = inputText;
+	int space = tmp.find_first_of(" ") + 1;
+	std::string header;
+	if (space > 0)
+	{
+		header = tmp.substr(0, space);
+		tmp = tmp.substr(space);
+	}
+	else
+	{
+		if (tmp.substr(0, 5) == "/help")
+		{
+			header = "/help";
+		}
+	}
+
+	client.text = tmp;
+
+	if (header == "/help")
+		client.type = TextType::HELP;
+	else if (header == "/whisper ")
+		client.type = TextType::WHISPER;
+	else
+		client.type = TextType::MESSAGE;
 }
 
 void ModuleNetworkingClient::SendTextToServer()
