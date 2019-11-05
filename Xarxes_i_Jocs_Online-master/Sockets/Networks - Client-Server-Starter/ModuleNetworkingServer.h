@@ -40,7 +40,7 @@ private:
 
 	void onSocketDisconnected(SOCKET socket) override;
 
-
+	void AddToText(std::string text);
 
 	//////////////////////////////////////////////////////////////////////
 	// State
@@ -62,7 +62,7 @@ private:
 		SOCKET socket;
 		std::string playerName;
 	};
-
+	std::string chunckOfText;
 	std::vector<ConnectedSocket> connectedSockets;
 };
 

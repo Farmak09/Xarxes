@@ -82,6 +82,8 @@ bool ModuleNetworkingServer::gui()
 		for (auto &connectedSocket : connectedSockets)
 			ImGui::Text("Player name: %s", connectedSocket.playerName.c_str());
 
+		ImGui::Text(chunckOfText.c_str());
+
 
 
 		ImGui::End();
@@ -147,5 +149,9 @@ void ModuleNetworkingServer::onSocketDisconnected(SOCKET socket)
 			break;
 		}
 	}
+}
+
+void ModuleNetworkingServer::AddToText(std::string text)
+{
 }
 
